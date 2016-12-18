@@ -6,8 +6,18 @@ const allUnitsHeight = 15; // всего блоков по  высоте
 const boxWidth = width / allUnitsWidth;
 const boxHeight = height / allUnitsHeight;
 const routeMap = {"up":[0,-1],"down":[0,1],"left":[-1,0],"right":[1,0]}
+const speed = 300;
 
 class SnakeBox{
+	/*
+	поля:
+	x - координата по горизонтали вправо
+	y - координата по вертикали вниз
+	route - направление блока(куда он будет двигаться в след раз)
+	boxName - имя(id) блока
+	self - ссылка на DOM элемент
+	nextBox - следующий блок змейки(начало с головы)
+	*/
 	constructor(x, y, route, boxName){	
 		this.x = x;
 		this.y = y;
@@ -47,8 +57,8 @@ class SnakeBox{
 	moveDown(){
 		this.moveBox(this.x,this.y+1);
 	}
-	setStyle(style){
-		this.self.style = style;
+	getStyle(style){
+		return getById(this.boxName).style;
 	}
 	setNextBox(nextBox){
 		this.nextBox = nextBox;
@@ -70,11 +80,18 @@ class SnakeBox{
 	}
 }
 class Snake{
+	/*
+	поля:
+	topBox - главный блок змейки(голова)
+	
+	*/
 	constructor(x,y,block,route){
 		var route = routeMap[route];
 		var route2 = routeMap["up"];
+		this.route = route2;
+		this.nextRoute = route2;
 		this.topBox = new SnakeBox(x,y,route2,"Snake"+x+y);
-		//this.topBox.self = "background-color:black";
+		//this.topBox.getStyle().backgroundColor = "#CC0000";
 		var lastBox = this.topBox;
 		x+=route[0];
 		y+=route[1];
@@ -85,6 +102,13 @@ class Snake{
 			x+=route[0];
 			y+=route[1];
 		}
+		var obj = this;
+		Snake.prototype.recursiveMove(obj);
+	}
+
+	recursiveMove(obj){
+		obj.move();
+		setTimeout(function(){Snake.prototype.recursiveMove(obj)}, speed);
 	}
 	/*constructor(x,y,block,route){
 		var routeMap = {"up":[0,-1],"down":[0,1],"left":[-1,0],"right":[1,0]}
@@ -136,9 +160,10 @@ class Snake{
 			route = bufferRoute;
 		}
 	}*/
-	move(route){
+	move(){
+		var route = this.route;
 		var checkRoute = Snake.prototype.routeInvers(route);
-		if(this.topBox.getRoute()[1] == checkRoute[1] && this.topBox.getRoute()[0] == checkRoute[0]) {
+		if(this.topBox == null || (this.topBox.getRoute()[1] == checkRoute[1] && this.topBox.getRoute()[0] == checkRoute[0])) {
 			return;
 		}
 		var currentBox = this.topBox;
@@ -155,26 +180,38 @@ class Snake{
 			currentBox.setRoute(bufferRoute);
 			bufferRoute = route;
 			var currentBox  = currentBox.getNextBox();
-			
+		}
+		this.route = this.nextRoute;
+	}
+	set Route(rou){
+		if(this.routeInvers(routeMap[rou])[0] != this.route[0] && this.routeInvers(routeMap[rou])[1] != this.route[1]){
+			this.nextRoute = routeMap[rou];
 		}
 	}
-	setRoute(route){
-		
-	}
 	getTopBox(){
+		if(this.topBox == null){
+			return false;
+		}
 		return this.topBox;
 	}
+	topBoxIsExist(){
+		if(this.topBox == null){
+			return false;
+		}else{
+			return true;
+		}
+	}
 	destroy(time){
-		this.recusiveDestroyBoxs(this.topBox,100);
+		this.recursiveDestroyBoxs(this.topBox,100);
 		this.topBox = null;
 	}
-	recusiveDestroyBoxs(topBox,time){
+	recursiveDestroyBoxs(topBox,time){
 		setTimeout(function(){
 			var bufferBox = topBox.getNextBox();
 			topBox.deleteBox();
 			topBox = null;
 			if( bufferBox != null){
-				Snake.prototype.recusiveDestroyBoxs(bufferBox, time);
+				Snake.prototype.recursiveDestroyBoxs(bufferBox, time);
 			}
 		}, time);
 	}
@@ -209,13 +246,6 @@ class Game{
 function getById(name){
 	return document.getElementById(name);
 }
-function sleep(time) {
-var ms = new Date().getTime();
-ms += time;
-console.log(ms +":"+(ms + time));
-while (new Date().getTime() < ms){}
-} 
-
 function main(){
 	var game = new Game();
 	getById("mainBox").style = "width:"+width+"px;height:"+height+"px;display:block"
@@ -223,15 +253,14 @@ function main(){
 		game.start();
 		document.onkeypress = function(e){
 			if(e.keyCode==39){
-				game.snake.right();
+				game.snake.Route = "right";
 			}else if(e.keyCode == 40){
-				game.snake.down();
+				game.snake.Route = "down";
 			}else if(e.keyCode == 38){
-				game.snake.up();
+				game.snake.Route = "up";
 			}else if(e.keyCode == 37){
-				game.snake.left();
+				game.snake.Route = "left";
 			}
 		}
 	}
-
 }
