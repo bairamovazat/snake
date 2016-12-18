@@ -1,0 +1,23 @@
+html{
+	overflow-y:hidden;
+}
+#mainBox{
+	display: none;
+	position: fixed;
+	width:0px;
+	height:0px;
+	border: 5px solid;
+}
+#mainBox > #mainStart{
+	position: relative;
+	border: 2px solid;
+	height:150px;
+	width:300px;
+	margin:calc(50% - 75px) calc(50% - 150px) auto;
+}
+#mainStart > #start{
+	text-align: center;
+	margin: 50px auto;
+	font-size:40px;
+	font-family:arial;
+}
