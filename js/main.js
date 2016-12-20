@@ -165,8 +165,15 @@ class Snake{
 		return this.topBox;
 	}
 	destroy(time){
-		this.recusiveDestroyBoxs(this.topBox,100);
-		this.topBox = null;
+		//this.recusiveDestroyBoxs(this.topBox,100);
+		this.linalDestroyBoxs(this.topBox);
+	}
+	linalDestroyBoxs(topBox){
+		while(topBox != null){
+			console.log("linalDestroyBoxs")
+			topBox.deleteBox();
+			topBox = topBox.getNextBox();
+		}
 	}
 	recusiveDestroyBoxs(topBox,time){
 		setTimeout(function(){
@@ -180,13 +187,43 @@ class Snake{
 	}
 }
 class Game{
+
 	initSnake(x,y){// устанавливает базовый блок на блоке x,y
 		//this.firstBox = new SnakeBox(0,0,"firstBox");
 		this.snake = new Snake(4,4,4,"down"); 
 
 	}
 	constructor(){
-
+		var obj = this;
+		getById("mainBox").style = "width:"+width+"px;height:"+height+"px;display:block"
+		getById("start").onclick = function(){
+			obj.start();
+			document.onkeypress = function(e){
+				obj.keyPress(e);
+			}
+		}
+	}
+	keyPress(e){
+		var obj= this;
+		var key = e.keyCode;
+		var keyPressMap = {
+			37: function () {obj.snake.left();},
+			38: function () {obj.snake.up();},
+			39: function () {obj.snake.right();},
+			40: function () {obj.snake.down();},
+		};
+	 
+	 	try{return keyPressMap[e.keyCode]();}catch(err){console.log(getInfoByKey(e))}
+		/*
+		if(e.keyCode==39){
+			this.snake.right();
+		}else if(e.keyCode == 40){
+			this.snake.down();
+		}else if(e.keyCode == 38){
+			this.snake.up();
+		}else if(e.keyCode == 37){
+			this.snake.left();
+		}*/
 	}
 	start(){
 		getById("mainStart").style.display = "none";
@@ -205,6 +242,17 @@ class Game{
 		}
 	}
 }
+function getInfoByKey(e){
+	return e.type +
+    ' keyCode=' + e.keyCode +
+    ' which=' + e.which +
+    ' charCode=' + e.charCode +
+    ' char=' + String.fromCharCode(e.keyCode || e.charCode) +
+    (e.shiftKey ? ' +shift' : '') +
+    (e.ctrlKey ? ' +ctrl' : '') +
+    (e.altKey ? ' +alt' : '') +
+    (e.metaKey ? ' +meta' : '') + "\n";
+}
 
 function getById(name){
 	return document.getElementById(name);
@@ -218,20 +266,4 @@ while (new Date().getTime() < ms){}
 
 function main(){
 	var game = new Game();
-	getById("mainBox").style = "width:"+width+"px;height:"+height+"px;display:block"
-	getById("start").onclick = function(){
-		game.start();
-		document.onkeypress = function(e){
-			if(e.keyCode==39){
-				game.snake.right();
-			}else if(e.keyCode == 40){
-				game.snake.down();
-			}else if(e.keyCode == 38){
-				game.snake.up();
-			}else if(e.keyCode == 37){
-				game.snake.left();
-			}
-		}
-	}
-
 }
