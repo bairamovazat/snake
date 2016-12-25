@@ -188,6 +188,7 @@ class snakeController{
 	getRoute(){
 		return this.route;
 	}
+	
 	getNextRoute(){
 		return this.nextRoute;
 	}
