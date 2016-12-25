@@ -11,7 +11,6 @@ const routeMap = {"up":[0,-1],"down":[0,1],"left":[-1,0],"right":[1,0]}
 const speed = 300;
 
 class SnakeBox{
-<<<<<<< HEAD
 	/*
 	поля:
 	x - координата по горизонтали вправо
@@ -21,11 +20,8 @@ class SnakeBox{
 	self - ссылка на DOM элемент
 	nextBox - следующий блок змейки(начало с головы)
 	*/
-	constructor(x, y, route, boxName){	
-=======
 	constructor(x, y, route, boxName, color){
 		this.color = color;
->>>>>>> develop
 		this.x = x;
 		this.y = y;
 		this.route = route;
@@ -90,27 +86,17 @@ class SnakeBox{
 	}
 }
 class Snake{
-<<<<<<< HEAD
 	/*
 	поля:
 	topBox - главный блок змейки(голова)
 	
 	*/
-	constructor(x,y,block,route){
-		var route = routeMap[route];
-		var route2 = routeMap["up"];
-		this.route = route2;
-		this.nextRoute = route2;
-		this.topBox = new SnakeBox(x,y,route2,"Snake"+x+y);
-		//this.topBox.getStyle().backgroundColor = "#CC0000";
-=======
 	constructor(x,y,block,buildRoute,snakeName, color){
 		var buildRoute = routeMap[buildRoute];
 		var snakeRoute = routeMap["up"];
 		this.snakeName = snakeName;
 		this.topBox = new SnakeBox(x,y,snakeRoute,this.snakeName+0, color);
 		//this.topBox.self = "background-color:black";
->>>>>>> develop
 		var lastBox = this.topBox;
 		x+=buildRoute[0];
 		y+=buildRoute[1];
@@ -154,18 +140,10 @@ class Snake{
 			route = bufferRoute;
 		}
 	}*/
-<<<<<<< HEAD
-	move(){
-		var route = this.route;
-		var checkRoute = Snake.prototype.routeInvers(route);
-		if(this.topBox == null || (this.topBox.getRoute()[1] == checkRoute[1] && this.topBox.getRoute()[0] == checkRoute[0])) {
-			return;
-=======
 	move(route){
 		if( route == null  || oppositeValues(this.topBox.getRoute(), route)) {
 			log("ошибка перемещения змейки")
 			return; // проверка на вхождение змейки в себя || отсутствия значения 
->>>>>>> develop
 		}
 		var route = routeMap[route];
 		var currentBox = this.topBox;
@@ -185,34 +163,12 @@ class Snake{
 		}
 		this.route = this.nextRoute;
 	}
-<<<<<<< HEAD
-	set Route(rou){
-		if(this.routeInvers(routeMap[rou])[0] != this.route[0] && this.routeInvers(routeMap[rou])[1] != this.route[1]){
-			this.nextRoute = routeMap[rou];
-		}
-	}
-=======
->>>>>>> develop
 	getTopBox(){
 		if(this.topBox == null){
 			return false;
 		}
 		return this.topBox;
 	}
-<<<<<<< HEAD
-	topBoxIsExist(){
-		if(this.topBox == null){
-			return false;
-		}else{
-			return true;
-		}
-	}
-	destroy(time){
-		this.recursiveDestroyBoxs(this.topBox,100);
-		this.topBox = null;
-	}
-	recursiveDestroyBoxs(topBox,time){
-=======
 	disguise(time){
 		//this.recusiveDestroyBoxs(this.topBox,100);
 		this.linalDisguiseBoxs(this.topBox);
@@ -225,16 +181,11 @@ class Snake{
 		}
 	}
 	recusiveDisguiseBoxs(topBox,time){
->>>>>>> develop
 		setTimeout(function(){
 			var bufferBox = topBox.getNextBox();
 			topBox.setColor('transparent');
 			if( bufferBox != null){
-<<<<<<< HEAD
-				Snake.prototype.recursiveDestroyBoxs(bufferBox, time);
-=======
 				Snake.prototype.recusiveDisguiseBoxs(bufferBox, time);
->>>>>>> develop
 			}
 		}, time);
 	}
@@ -394,25 +345,6 @@ function getInfoByKey(e){
 function getById(name){
 	return document.getElementById(name);
 }
-<<<<<<< HEAD
-function main(){
-	var game = new Game();
-	getById("mainBox").style = "width:"+width+"px;height:"+height+"px;display:block"
-	getById("start").onclick = function(){
-		game.start();
-		document.onkeypress = function(e){
-			if(e.keyCode==39){
-				game.snake.Route = "right";
-			}else if(e.keyCode == 40){
-				game.snake.Route = "down";
-			}else if(e.keyCode == 38){
-				game.snake.Route = "up";
-			}else if(e.keyCode == 37){
-				game.snake.Route = "left";
-			}
-		}
-	}
-=======
 
 function inversRoute(route){
 	if(typeof route == "string"){
@@ -457,5 +389,4 @@ function log(logs){
 }
 function main(){
 	var game = new Game();
->>>>>>> develop
 }
