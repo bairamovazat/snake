@@ -26,7 +26,7 @@ class SnakeBox{
 		getById('mainBox').appendChild(div);
 		this.self = getById(this.boxName);
 	}
-	deleteBox(time){
+	deleteBox(){
 			if(this.self != null && this.self.parentNode!= null){
 				this.self.parentNode.removeChild(this.self);
 			}
@@ -68,7 +68,6 @@ class SnakeBox{
 	getCloneBox(){
 		let boxName = this.boxName.split(':')[0] + ":" + (1 + Number(this.boxName.split(':')[1])); 
 		var box = new SnakeBox(this.x, this.y, this.route, boxName, this.color);
-		log(box);
 		return box;
 	}
 	getX(){
@@ -96,8 +95,9 @@ class Snake{
 		var snakeRoute = routeMap["up"];
 		this.snakeName = snakeName;
 		this.topBox = new SnakeBox(x,y,snakeRoute,this.snakeName+":"+0, color);
+		this.lastBox = this.topBox;
 		//this.topBox.self = "background-color:black";
-		var lastBox = this.topBox;
+		/*var lastBox = this.topBox;
 		x+=buildRoute[0];
 		y+=buildRoute[1];
 		for(var i = 1;i<block; i++){
@@ -106,8 +106,10 @@ class Snake{
 			lastBox = currentBox;
 			x+=buildRoute[0];
 			y+=buildRoute[1];
+		}*/
+		for(var i = 1;i<block; i++){
+			this.appendBox();
 		}
-		this.lastBox = lastBox;
 	}
 	appendBox(){
 		var box = this.lastBox.getCloneBox();
@@ -117,11 +119,27 @@ class Snake{
 		this.lastBox.moveBox(this.lastBox.getX() + route[0],this.lastBox.getY() + route[1]);
 	}
 	popBox(){
+		if(this.lastBox == null && this.topBox == null){
+			log('snake destroy');
+			return(false);
+		}
+		if(this.lastBox == this.topBox){
+			this.lastBox.deleteBox();
+			this.topBox.deleteBox();
+			this.lastBox = null;
+			this.topBox = null;
+			log('snake destroy');
+			return(true);
+		}
 		var currentBox = this.topBox;
 		while(currentBox.getNextBox() != this.lastBox){
 			currentBox = currentBox.getNextBox();
 		}
+		var lastBox = currentBox.getNextBox(); 
 		currentBox.setNextBox(null);
+		lastBox.deleteBox();
+		this.lastBox = currentBox;
+		return(true)
 	}
 	/*constructor(x,y,block,route){
 		var routeMap = {"up":[0,-1],"down":[0,1],"left":[-1,0],"right":[1,0]}
@@ -156,10 +174,6 @@ class Snake{
 		while(currentBox != null){
 			var currentX = Number(currentBox.getX())+Number(route[0]);
 			var currentY = Number(currentBox.getY())+Number(route[1]);
-			if((currentX >= allUnitsWidth | currentX < 0 | currentY >= allUnitsHeight | currentY < 0) && outputForTheField == false){
-				this.disguise();
-				return;
-			}
 			currentBox.moveBox(currentX, currentY);
 			route = currentBox.getRoute();
 			currentBox.setRoute(bufferRoute);
@@ -170,7 +184,13 @@ class Snake{
 	getTopBox(){
 		return this.topBox;
 	}
-	disguise(time){
+	getX(){
+		return this.topBox.getX();
+	}
+	getY(){
+		return this.topBox.getY();
+	}
+	/*disguise(time){
 		//this.recusiveDestroyBoxs(this.topBox,100);
 		this.linalDisguiseBoxs(this.topBox);
 	}
@@ -189,12 +209,12 @@ class Snake{
 				Snake.prototype.recusiveDisguiseBoxs(bufferBox, time);
 			}
 		}, time);
-	}
+	}*/
 }
 class snakeController{
 	constructor(obj, name){
 		this.moveTime = 300; // скорость передвижения;
-		this.nextRoute = "up";
+		this.nextRoute = null;
 		this.route = null;
 		this.snake = obj;
 		this.moveTimeOut = null;
@@ -202,17 +222,49 @@ class snakeController{
 	appendBox(){
 		this.snake.appendBox();
 	}
+	popBox(){
+		this.snake.popBox();
+	}
+	destroySnake(){
+		this.moveTimeOut = null;
+		while(this.snake.popBox() == true){log('удалён последний элемент из змейки')}
+		var obj = this;
+		delete obj.snake;
+		alert("Вы проиграли :(")
+		this.resetSnake();
+	}
 	left(){
+		if(this.moveTo("left") == false){return;}
 		this.snake.move("left");
 	}
 	right(){
+		if(this.moveTo("right") == false){return;}
 		this.snake.move("right");
 	}
 	up(){
+		if(this.moveTo("up") == false){return;}
 		this.snake.move("up");
 	}
 	down(){
+		if(this.moveTo("down") == false){return;}
 		this.snake.move("down");
+	}
+	moveTo(route){
+		var route = routeMap[route];
+		var x = this.snake.getX() + route[0];
+		var y = this.snake.getY() + route[1];
+		log(x + ":" + y )
+		if(x >= allUnitsWidth || x < 0 || y >= allUnitsHeight || y < 0){
+			this.destroySnake();
+			return false;
+		}
+	}
+	recusiveMove(){
+		var obj = this;
+		obj.setMoveTimeOut(obj);
+	}
+	resetSnake(){
+		this.snake = new Snake(6, 4, 5, "down", "first", "red"); ///////
 	}
 	getRoute(){
 		return this.route;
@@ -247,19 +299,13 @@ class snakeController{
 				obj.setMoveTimeOut(obj)
 			},obj.getMoveTime())
 	}
-	recusiveMove(){
-		var obj = this;
-		obj.setMoveTimeOut(obj);
-	}
-	reset(){
-
-	}
 }
 class gameController{
 	constructor(){
 		var obj = this;
 		this.snakesArray = {};
 		this.keyPressMap = {};
+		this.gameMap = {}; // вся карта 
 		document.onkeydown = function(e){
 				obj.keyPress(e);
 			}
@@ -276,6 +322,7 @@ class gameController{
 			this.keyPressMap[40] = function(){obj.snakesArray[snakeName].down();}
 			this.keyPressMap[37] = function(){obj.snakesArray[snakeName].left();}
 			this.keyPressMap[107] = function(){obj.snakesArray[snakeName].appendBox();}
+			this.keyPressMap[109] = function(){obj.snakesArray[snakeName].popBox();}
 		}
 		else if(type == 'character' && autoControl == false){
 			this.keyPressMap[87] = function(){obj.snakesArray[snakeName].up();}
@@ -302,7 +349,15 @@ class gameController{
 		try{return this.keyPressMap[key.keyCode]();}catch(e){log(getInfoByKey(key) + "\n" + 'Ошибка ' + e.name + ":" + e.message + "\n" + e.stack)}
 	}
 }
+/*class Point(){
+	constructor(){ 
+	}
+	setRandomDot(){
+		var x = getRandomInt(0, allUnitsWidth)
+		var y = getRandomInt(0, allUnitsHeight)
 
+	}
+}*/
 class Game{
 	constructor(){
 		var obj = this;
@@ -317,7 +372,7 @@ class Game{
 		this.initBlock();
 		this.controller = new gameController();
 		this.controller.addSnake(6, 4, 5, "down", "first", "red");
-		this.controller.setControl('arrows', 'first',  true);
+		this.controller.setControl('arrows', 'first',  false);
 		//this.controller.addSnake(4, 4, 5, "down", "second", "green");
 		//this.controller.setControl('character', "second", true);
 	}
@@ -385,6 +440,9 @@ function oppositeValues(route1, route2){
 	}else{
 		return false;
 	}
+}
+function getRandomInt(min, max){
+	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 function log(logs){
 	if(debug){
