@@ -16,6 +16,7 @@ class SnakeBox{
 		this.y = y;
 		this.route = route;
 		this.boxName = boxName;
+		this.nextBox = null;
 		this.setBox();
 	}
 	setBox(){
@@ -29,9 +30,11 @@ class SnakeBox{
 			if(this.self != null && this.self.parentNode!= null){
 				this.self.parentNode.removeChild(this.self);
 			}
+			var obj = this;
+			delete this.x, this.y, this.route, this.boxName, this.nextBox, this.self, obj;
 	}
 	moveBox(x,y){
-		if((x <= (allUnitsWidth-1) & x>=0 & y >= 0 & y <= (allUnitsHeight-1)) || outputForTheField){
+		if(((x <= (allUnitsWidth-1) & x>=0 & y >= 0 & y <= (allUnitsHeight-1)) || outputForTheField) && x != null && x != undefined && y != null && y!= undefined ){
 			this.x = x;
 			this.y = y;
 			this.self.style.top = (this.y*boxHeight) + "px";
@@ -62,11 +65,20 @@ class SnakeBox{
 	setRoute(route){
 		this.route = route;
 	}
+	getCloneBox(){
+		let boxName = this.boxName.split(':')[0] + ":" + (1 + Number(this.boxName.split(':')[1])); 
+		var box = new SnakeBox(this.x, this.y, this.route, boxName, this.color);
+		log(box);
+		return box;
+	}
 	getX(){
 		return this.x;
 	}
 	getY(){
 		return this.y;
+	}
+	getColor(){
+		return this.color;
 	}
 	getNextBox(){
 		return  this.nextBox;
@@ -74,27 +86,42 @@ class SnakeBox{
 	getRoute(){
 		return this.route;
 	}
+	toString(){
+		return("name: " + this.boxName + "\nx: " + this.x + "\ny: " + this.y + "\ncolor: " + this.color + "\nroute: " + this.route + "\n");
+	}
 }
 class Snake{
 	constructor(x,y,block,buildRoute,snakeName, color){
 		var buildRoute = routeMap[buildRoute];
 		var snakeRoute = routeMap["up"];
 		this.snakeName = snakeName;
-		this.topBox = new SnakeBox(x,y,snakeRoute,this.snakeName+0, color);
+		this.topBox = new SnakeBox(x,y,snakeRoute,this.snakeName+":"+0, color);
 		//this.topBox.self = "background-color:black";
 		var lastBox = this.topBox;
 		x+=buildRoute[0];
 		y+=buildRoute[1];
 		for(var i = 1;i<block; i++){
-			let currentBox = new SnakeBox(x,y,snakeRoute,this.snakeName+i, color);
-			lastBox.nextBox = currentBox;
+			var currentBox = new SnakeBox(x,y,snakeRoute,this.snakeName + ":" + i, color);
+			lastBox.setNextBox(currentBox);
 			lastBox = currentBox;
 			x+=buildRoute[0];
 			y+=buildRoute[1];
 		}
+		this.lastBox = lastBox;
 	}
 	appendBox(){
-
+		var box = this.lastBox.getCloneBox();
+		this.lastBox.setNextBox(box);
+		this.lastBox = box;
+		var route = inversRoute(box.getRoute())
+		this.lastBox.moveBox(this.lastBox.getX() + route[0],this.lastBox.getY() + route[1]);
+	}
+	popBox(){
+		var currentBox = this.topBox;
+		while(currentBox.getNextBox() != this.lastBox){
+			currentBox = currentBox.getNextBox();
+		}
+		currentBox.setNextBox(null);
 	}
 	/*constructor(x,y,block,route){
 		var routeMap = {"up":[0,-1],"down":[0,1],"left":[-1,0],"right":[1,0]}
@@ -129,7 +156,7 @@ class Snake{
 		while(currentBox != null){
 			var currentX = Number(currentBox.getX())+Number(route[0]);
 			var currentY = Number(currentBox.getY())+Number(route[1]);
-			if(currentX >= allUnitsWidth | currentX < 0 | currentY >= allUnitsHeight | currentY < 0){
+			if((currentX >= allUnitsWidth | currentX < 0 | currentY >= allUnitsHeight | currentY < 0) && outputForTheField == false){
 				this.disguise();
 				return;
 			}
@@ -138,7 +165,6 @@ class Snake{
 			currentBox.setRoute(bufferRoute);
 			bufferRoute = route;
 			var currentBox  = currentBox.getNextBox();
-			
 		}
 	}
 	getTopBox(){
@@ -172,6 +198,9 @@ class snakeController{
 		this.route = null;
 		this.snake = obj;
 		this.moveTimeOut = null;
+	}
+	appendBox(){
+		this.snake.appendBox();
 	}
 	left(){
 		this.snake.move("left");
@@ -239,15 +268,16 @@ class gameController{
 		var snake = new snakeController(new Snake(x,y,boxs,route,name,color))
 		this.snakesArray[name] = snake;
 	}
-	setControl(type, snakeName, autoControl = false){
+	setControl(type, snakeName, autoControl ){
 		var obj = this;
 		if(type == 'arrows' && autoControl == false){
 			this.keyPressMap[38] = function(){obj.snakesArray[snakeName].up();}
 			this.keyPressMap[39] = function(){obj.snakesArray[snakeName].right();}
 			this.keyPressMap[40] = function(){obj.snakesArray[snakeName].down();}
 			this.keyPressMap[37] = function(){obj.snakesArray[snakeName].left();}
+			this.keyPressMap[107] = function(){obj.snakesArray[snakeName].appendBox();}
 		}
-		else if(type = 'character' && autoControl == false){
+		else if(type == 'character' && autoControl == false){
 			this.keyPressMap[87] = function(){obj.snakesArray[snakeName].up();}
 			this.keyPressMap[68] = function(){obj.snakesArray[snakeName].right();}
 			this.keyPressMap[83] = function(){obj.snakesArray[snakeName].down();}
@@ -260,7 +290,7 @@ class gameController{
 			this.keyPressMap[37] = function(){obj.snakesArray[snakeName].setNextRoute("left");}
 			this.snakesArray[snakeName].recusiveMove();
 		}
-		else if(type = 'character' && autoControl == true){
+		else if(type == 'character' && autoControl == true){
 			this.keyPressMap[87] = function(){obj.snakesArray[snakeName].setNextRoute("up");}
 			this.keyPressMap[68] = function(){obj.snakesArray[snakeName].setNextRoute("right");}
 			this.keyPressMap[83] = function(){obj.snakesArray[snakeName].setNextRoute("down");}
@@ -269,7 +299,7 @@ class gameController{
 		}
 	}
 	keyPress(key){
-		try{return this.keyPressMap[key.keyCode]();}catch(err){log(getInfoByKey(key))}
+		try{return this.keyPressMap[key.keyCode]();}catch(e){log(getInfoByKey(key) + "\n" + 'Ошибка ' + e.name + ":" + e.message + "\n" + e.stack)}
 	}
 }
 
@@ -287,9 +317,9 @@ class Game{
 		this.initBlock();
 		this.controller = new gameController();
 		this.controller.addSnake(6, 4, 5, "down", "first", "red");
-		this.controller.setControl('arrows', 'first',  false);
-		this.controller.addSnake(4, 4, 5, "down", "second", "green");
-		this.controller.setControl('character', "second", true);
+		this.controller.setControl('arrows', 'first',  true);
+		//this.controller.addSnake(4, 4, 5, "down", "second", "green");
+		//this.controller.setControl('character', "second", true);
 	}
 	initBlock(){
 		var i = 0, j = 0;
