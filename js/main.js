@@ -8,7 +8,6 @@ const allUnitsHeight = 15; // всего блоков по  высоте
 const boxWidth = width / allUnitsWidth;
 const boxHeight = height / allUnitsHeight;
 const routeMap = {"up":[0,-1],"down":[0,1],"left":[-1,0],"right":[1,0]}
-
 class SnakeBox{
 	constructor(x, y, route, boxName, color){
 		this.color = color;
@@ -184,6 +183,9 @@ class Snake{
 	getTopBox(){
 		return this.topBox;
 	}
+	getLastBox(){
+		return this.lastBox;
+	}
 	getX(){
 		return this.topBox.getX();
 	}
@@ -212,18 +214,32 @@ class Snake{
 	}*/
 }
 class snakeController{
-	constructor(obj, name){
+	constructor(obj, gameMap){
 		this.moveTime = 300; // скорость передвижения;
 		this.nextRoute = null;
 		this.route = null;
 		this.snake = obj;
 		this.moveTimeOut = null;
+		this.gameMap = gameMap;
 	}
 	appendBox(){
 		this.snake.appendBox();
 	}
 	popBox(){
 		this.snake.popBox();
+	}
+	removedFromThisBox(box){
+		if(box instanceof SnakeBox){
+			var currentBox = this.snake.getTopBox();
+			while(box != null || box != undefined || box != currentBox){
+				currentBox = currentBox.getNextBox();
+			}
+			if(currentBox != (null || undefined)){ 
+				while(this.snake.getLastBox() != currentBox){
+					this.popBox();
+				}
+			} 
+		}
 	}
 	destroySnake(){
 		this.moveTimeOut = null;
@@ -254,10 +270,7 @@ class snakeController{
 		var x = this.snake.getX() + route[0];
 		var y = this.snake.getY() + route[1];
 		log(x + ":" + y )
-		if(x >= allUnitsWidth || x < 0 || y >= allUnitsHeight || y < 0){
-			this.destroySnake();
-			return false;
-		}
+		if(this.gameMap.goTo(this, x, y) == false){return false}; // return false - следующий ход не засчитывается , true - звсчитывается;
 	}
 	recusiveMove(){
 		var obj = this;
@@ -305,13 +318,13 @@ class gameController{
 		var obj = this;
 		this.snakesArray = {};
 		this.keyPressMap = {};
-		this.gameMap = {}; // вся карта 
+		this.gameMap = new GameMap();
 		document.onkeydown = function(e){
-				obj.keyPress(e);
-			}
+			obj.keyPress(e);
+		}
 	}
 	addSnake(x,y,boxs,route,name,color){
-		var snake = new snakeController(new Snake(x,y,boxs,route,name,color))
+		var snake = new snakeController(new Snake(x,y,boxs,route,name,color), this.gameMap)
 		this.snakesArray[name] = snake;
 	}
 	setControl(type, snakeName, autoControl ){
@@ -358,6 +371,29 @@ class gameController{
 
 	}
 }*/
+class GameMap{
+	constructor(){
+		this.gameMap = {};
+	}
+	add(obj, x, y){
+		if(this.gameMap[x, y] != (null || undefined )){
+			log('Данный блок занят!! Не записан в gameMap!!!');
+			return;
+		}
+		this.gameMap[x, y] = obj;
+	}
+	goTo(callObj, x, y){
+		if(callObj instanceof snakeController){
+			if(x >= allUnitsWidth || x < 0 || y >= allUnitsHeight || y < 0){
+				callObj.destroySnake();
+				return false;
+			}	
+		}
+	}
+	get(x, y){
+		return this.gameMap[x, y];
+	}
+}
 class Game{
 	constructor(){
 		var obj = this;
@@ -365,7 +401,6 @@ class Game{
 		getById("start").onclick = function(){
 			obj.start();
 		}
-		//document.addEventListener("click",function(a){alert(a.target.id)});
 	}
 	start(){
 		getById("mainStart").style.display = "none";
