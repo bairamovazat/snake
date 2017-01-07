@@ -13,7 +13,7 @@ class Swipe{
 	constructor(){
 		this.x;
 		this.y;
-		this.swipesArray = [];
+		this.minSwipeLength = 200;
 		var obj = this;
 		window.addEventListener("touchstart", function(e){obj.swipeStart(e)});
 		window.addEventListener("touchend" , function(e){obj.swipeEnd(e)});
@@ -23,26 +23,23 @@ class Swipe{
 		this.lastY = e.changedTouches[0].pageY;;
 	}
 	swipeEnd(e){
+		var swipe = "notswipe";
+		var len = this.minSwipeLength;
 		var currentX = e.changedTouches[0].pageX;
 		var currentY = e.changedTouches[0].pageY; 
-		var dX = this.lastX - currentX;
-		var dY = this.lastY - currentY;
-		dX*= (dX < 0) ? (-1) : 1;
-		dY*= (dY < 0) ? (-1) : 1;
-		this.swipesArray.push({"x":dX,"y":dY});
-		console.log(this.swipesArray);
-		if(this.swipesArray.length % 10 == 0 ){
-			var minX = this.swipesArray[0]["x"];
-			var minY = this.swipesArray[0]["y"];
-			for(var key in this.swipesArray){
-				if(key["x"] < minX){
-					minX = this.swipeArray[key]["x"]
-				}
-				if(key["y"] < minY){
-					minY = this.swipeArray[key]["y"]
-				}
+		var dX = currentX - this.lastX ;
+		var dY = currentY - this.lastY;
+		if(Math.abs(dX) >= len && Math.abs(dY) >= len){
+			if(Math.abs(dX) > Math.abs(dX)){
+				swipe = (dX > 0)? "right" :"left"; 
+			}else{
+				swipe = (dY > 0)? "down" : "up"; // данные расчитаны на обычную координатную плоскость	
 			}
-			alert("minX = " + minX + ", minY = " + minY)
+		}else if(Math.abs(dX) >= len){
+			swipe = (dX > 0)? "right" :"left";
+		}else if(Math.abs(dY) >= len){
+			swipe = (dY > 0)? "up" :"down";
 		}
+		alert(swipe);
 	}
 }
