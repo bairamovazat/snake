@@ -9,6 +9,7 @@ const allUnitsHeight = 15; // всего блоков по  высоте
 const boxWidth = width / allUnitsWidth;
 const boxHeight = height / allUnitsHeight;
 const routeMap = {"up":[0,-1],"down":[0,1],"left":[-1,0],"right":[1,0]}
+const speed = 300;
 class SnakeBox{
 	constructor(x, y, route, boxName, color){
 		this.color = color;
@@ -229,7 +230,7 @@ class snakeController{
 	constructor(x,y,boxs,route,name,color,gameController){
 		this.score = 0;
 		this.gameController = gameController;
-		this.moveTime = 300; // скорость передвижения;
+		this.moveTime = speed; // скорость передвижения;
 		this.nextRoute = null;
 		this.route = null;
 		this.snake = new Snake(x,y,boxs,route,name,color);
@@ -455,7 +456,7 @@ class gameController{
 }*/
 class Point{ // нужно доделать от зацикливания, т.е точка выбирается рандомно
 	constructor(){
-		alert("Вызов Point")
+		log("Вызов Point")
 		this.color = "black";
 		this.x;
 		this.y;
