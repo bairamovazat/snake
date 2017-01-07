@@ -255,7 +255,7 @@ class snakeController{
 	constructor(x,y,boxs,route,name,color,gameController){
 		this.score = 0;
 		this.gameController = gameController;
-		this.moveTime = 300; // скорость передвижения;
+		this.moveTime = speed; // скорость передвижения;
 		this.nextRoute = null;
 		this.route = null;
 		this.snake = new Snake(x,y,boxs,route,name,color);
@@ -481,7 +481,7 @@ class gameController{
 }*/
 class Point{ // нужно доделать от зацикливания, т.е точка выбирается рандомно
 	constructor(){
-		alert("Вызов Point")
+		log("Вызов Point")
 		this.color = "black";
 		this.x;
 		this.y;
