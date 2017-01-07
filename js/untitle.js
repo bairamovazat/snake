@@ -11,6 +11,7 @@ function getByTag(tag){
 }
 class Swipe{
 	constructor(){
+		alert("init Swipe")
 		this.x;
 		this.y;
 		this.minSwipeLength = 200;
