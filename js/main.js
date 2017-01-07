@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", main);
 const debug = true;
 const outputForTheField = false;
+const cuttingDownSnake = true; //выбор срезать змейку или польностью удалять при столкновении 
 const width = 600;
 const height = 600;
 const allUnitsWidth = 15; // всего блоков по  ширине
@@ -17,6 +18,7 @@ class SnakeBox{
 		this.boxName = boxName;
 		this.nextBox = null;
 		this.setBox();
+		gameMap.add(this,x,y);
 	}
 	setBox(){
 		var div = document.createElement("div");
@@ -34,10 +36,13 @@ class SnakeBox{
 	}
 	moveBox(x,y){
 		if(((x <= (allUnitsWidth-1) & x>=0 & y >= 0 & y <= (allUnitsHeight-1)) || outputForTheField) && x != null && x != undefined && y != null && y!= undefined ){
+			gameMap.clear(this.x, this.y);
 			this.x = x;
 			this.y = y;
+			gameMap.add(this, x, y);
 			this.self.style.top = (this.y*boxHeight) + "px";
 			this.self.style.left = (this.x*boxWidth) + "px";
+			//log(gameMap.get(x,y))
 		}
 	}
 	moveLeft(){
@@ -64,9 +69,18 @@ class SnakeBox{
 	setRoute(route){
 		this.route = route;
 	}
-	getCloneBox(){
+	getCloneBox(data){
+		if (data = 'goBack'){
+			var route = inversRoute(this.getRoute())
+			var x = this.getX() + route[0];
+			var y = this.getY() + route[1];
+		}else{
+			var x = this.x;
+			var y = this.y;
+		}
+
 		let boxName = this.boxName.split(':')[0] + ":" + (1 + Number(this.boxName.split(':')[1])); 
-		var box = new SnakeBox(this.x, this.y, this.route, boxName, this.color);
+		var box = new SnakeBox(x, y, this.route, boxName, this.color);
 		return box;
 	}
 	getX(){
@@ -111,11 +125,9 @@ class Snake{
 		}
 	}
 	appendBox(){
-		var box = this.lastBox.getCloneBox();
+		var box = this.lastBox.getCloneBox('goBack');
 		this.lastBox.setNextBox(box);
 		this.lastBox = box;
-		var route = inversRoute(box.getRoute())
-		this.lastBox.moveBox(this.lastBox.getX() + route[0],this.lastBox.getY() + route[1]);
 	}
 	popBox(){
 		if(this.lastBox == null && this.topBox == null){
@@ -214,13 +226,15 @@ class Snake{
 	}*/
 }
 class snakeController{
-	constructor(obj, gameMap){
+	constructor(x,y,boxs,route,name,color,gameController){
+		this.score = 0;
+		this.gameController = gameController;
 		this.moveTime = 300; // скорость передвижения;
 		this.nextRoute = null;
 		this.route = null;
-		this.snake = obj;
+		this.snake = new Snake(x,y,boxs,route,name,color);
 		this.moveTimeOut = null;
-		this.gameMap = gameMap;
+		this.referenceData = { "x" : x ,"y" : y ,"boxs" : boxs ,"route" : route ,"name" : name ,"color" : color };
 	}
 	appendBox(){
 		this.snake.appendBox();
@@ -228,10 +242,28 @@ class snakeController{
 	popBox(){
 		this.snake.popBox();
 	}
+	addPoint(){
+		this.score += 1;
+		this.appendBox();
+		log("score: " + this.score + "------------------");
+	}
+	containsBlock(box){
+		var currentBox = this.snake.getTopBox();
+		while(currentBox != (null||undefined)){
+			if(currentBox == box){
+				return true;
+			}
+			currentBox = currentBox.getNextBox();
+		} 
+		return false;
+	}
 	removedFromThisBox(box){
 		if(box instanceof SnakeBox){
+			if(this.containsBlock == false){
+				return false;
+			}
 			var currentBox = this.snake.getTopBox();
-			while(box != null || box != undefined || box != currentBox){
+			while(currentBox != (null || undefined ) && box != currentBox){
 				currentBox = currentBox.getNextBox();
 			}
 			if(currentBox != (null || undefined)){ 
@@ -241,13 +273,19 @@ class snakeController{
 			} 
 		}
 	}
-	destroySnake(){
+	destroySnake(){ 
 		this.moveTimeOut = null;
+		var currentBox = this.snake.getTopBox();
+		while(currentBox != (null || undefined)){
+			gameMap.clear(currentBox.getX(),currentBox.getY());
+			currentBox = currentBox.getNextBox();
+		}
 		while(this.snake.popBox() == true){log('удалён последний элемент из змейки')}
 		var obj = this;
 		delete obj.snake;
-		alert("Вы проиграли :(")
-		this.resetSnake();
+		this.route = null;
+		this.nextRoute = null;
+		this.gameController.snakeDestroyed(this.referenceData["name"]);
 	}
 	left(){
 		if(this.moveTo("left") == false){return;}
@@ -266,18 +304,28 @@ class snakeController{
 		this.snake.move("down");
 	}
 	moveTo(route){
+		if( route == null  || oppositeValues(this.snake.topBox.getRoute(), route)) {
+			log("ошибка перемещения змейки")
+			return; // проверка на вхождение змейки в себя || отсутствия значения 
+		}
 		var route = routeMap[route];
 		var x = this.snake.getX() + route[0];
 		var y = this.snake.getY() + route[1];
-		log(x + ":" + y )
-		if(this.gameMap.goTo(this, x, y) == false){return false}; // return false - следующий ход не засчитывается , true - звсчитывается;
+		if(gameMap.goTo(this, x, y) == false){return false}; // return false - следующий ход не засчитывается , true - звсчитывается;
+	}
+	move(route){
+		if(this.moveTo(route) == false){
+			return false;
+		}
+		this.snake.move(route);
 	}
 	recusiveMove(){
 		var obj = this;
 		obj.setMoveTimeOut(obj);
 	}
 	resetSnake(){
-		this.snake = new Snake(6, 4, 5, "down", "first", "red"); ///////
+		var data = this.referenceData;
+		this.snake = new Snake(data["x"],data["y"],data["boxs"],data["route"],data["name"],data["color"]); 
 	}
 	getRoute(){
 		return this.route;
@@ -297,7 +345,8 @@ class snakeController{
 		}
 	}
 	setNextRoute(route){
-		if(oppositeValues(this.nextRoute , route) == true || route == false){
+		var snakeRoute = this.snake.getTopBox().getRoute();
+		if(oppositeValues(snakeRoute , route) == true || route == false){
 			log('error snakeController.setNextRoute');
 		}else{
 			log("setRoute: this.Route = " + this.nextRoute + "; route = " + route);
@@ -308,24 +357,55 @@ class snakeController{
 		obj.moveTimeOut = setTimeout(
 			function(){
 				obj.setRoute(obj.getNextRoute());
-				obj.snake.move(obj.getRoute());
+				obj.move(obj.getRoute());
 				obj.setMoveTimeOut(obj)
 			},obj.getMoveTime())
 	}
 }
+
 class gameController{
 	constructor(){
 		var obj = this;
 		this.snakesArray = {};
 		this.keyPressMap = {};
-		this.gameMap = new GameMap();
+		this.gameMap = new GameMap(this); // можно не присваивать к определённой переменной так как после создания объекта он сам записывается в window.gameMap
+		this.point = new Point();
 		document.onkeydown = function(e){
 			obj.keyPress(e);
 		}
+		this.snakesSum = 0;
 	}
 	addSnake(x,y,boxs,route,name,color){
-		var snake = new snakeController(new Snake(x,y,boxs,route,name,color), this.gameMap)
+		var snake = new snakeController(x,y,boxs,route,name,color,this)
 		this.snakesArray[name] = snake;
+		this.snakesSum += 1;
+	}
+	snakeDestroyed(snakeName){
+		alert(snakeName);
+		var length = this.getSnakesArrayLength()
+		if (length <= 1	 && this.snakesSum < 2){
+			this.snakesArray[snakeName].resetSnake();
+		}
+		else if( length <= 2 && this.snakesSum >=2){
+			this.snakesArray[snakeName].resetSnake();
+		}
+		else{
+			this.snakesArray[snakeName].resetSnake();
+		}
+	}
+	getSnakesArrayLength(){
+		var i = 0;
+		for(var key in this.snakesArray){
+			i ++;
+		}
+		return i;
+	}
+	getSnakesArrayNames(){
+		var namesArray = [];
+		for(var key in this.snakesArray){
+			namesArray.push(key);
+		}
+		return namesArray;
 	}
 	setControl(type, snakeName, autoControl ){
 		var obj = this;
@@ -336,6 +416,7 @@ class gameController{
 			this.keyPressMap[37] = function(){obj.snakesArray[snakeName].left();}
 			this.keyPressMap[107] = function(){obj.snakesArray[snakeName].appendBox();}
 			this.keyPressMap[109] = function(){obj.snakesArray[snakeName].popBox();}
+			this.keyPressMap[96] = function(){log(gameMap.toString());}
 		}
 		else if(type == 'character' && autoControl == false){
 			this.keyPressMap[87] = function(){obj.snakesArray[snakeName].up();}
@@ -371,27 +452,136 @@ class gameController{
 
 	}
 }*/
-class GameMap{
+class Point{ // нужно доделать от зацикливания, т.е точка выбирается рандомно
 	constructor(){
+		alert("Вызов Point")
+		this.color = "black";
+		this.x;
+		this.y;
+		this.initPoint();
+	}
+	initPoint(){
+		var coordinates = this.getRandomCoordinates(); 
+		this.x = coordinates[0];
+		this.y = coordinates[1];
+		gameMap.add(this,this.x,this.y);
+		this.name =  "point" + this.x + this.y;
+		var div = document.createElement("div");
+		div.id = this.name;
+		div.style = "width:"+(boxWidth-2)+"px;height:"+(boxHeight-2)+"px;border:1px solid;position:absolute;top:" + (this.y*boxHeight) + "px;left:" + (this.x*boxWidth) + "px;background-color:"+ this.color+";";
+		getById('mainBox').appendChild(div);
+		this.self = getById(this.boxName);
+	}
+	setTo(x,y){
+		gameMap.clear(this.x, this.y);
+		this.x = x;
+		this.y = y;
+		gameMap.add(this, this.x, this.y);
+		getById(this.name).style.top = this.y*boxHeight + "px";
+		getById(this.name).style.left = this.x*boxWidth + "px"; 
+	}
+	resetPoint(){
+		var coordinates = this.getRandomCoordinates();
+		var x = coordinates[0];
+		var y = coordinates[1];
+		this.setTo(x,y);
+	}
+	getRandomCoordinates(){
+		var i = 0 // на всякий , что бы не зациклилось
+		do{
+			var x = getRandomInt(0, allUnitsWidth-1);
+			var y = getRandomInt(0, allUnitsHeight-1);
+			i++;
+			//log(x+","+y+";checkCoordinates: " + this.checkCoordinates(x,y));
+		}while(this.checkCoordinates(x,y) == false && i < (allUnitsHeight * allUnitsWidth));
+		if(i >= 20){alert("point вызвался "+ i + "раз"); return;};
+		var bufferArray = [x,y];
+		return bufferArray;
+	}
+	checkCoordinates(x,y){
+		if(gameMap.get(x,y) == null){
+			return true;
+		}else{
+			return false;
+		}
+
+	}
+}
+class GameMap{
+	// можно сделать все пустые клетки gameMap равные clear или на подобии того. Но считаю, что это будет занимать больше по памяти , по этому пустые клетки не будут никак размечаться
+	/*
+	пустой
+	конец поля
+	своя змейка
+	чужая змейка
+	очко
+	препятствие
+	телепорт
+	различные бонусы
+	*/
+	constructor(gameController){
+		this.gameController = gameController; 
+		window.gameMap = this; // gameMap объявил глобально так как были траблы с этим
 		this.gameMap = {};
 	}
 	add(obj, x, y){
-		if(this.gameMap[x, y] != (null || undefined )){
-			log('Данный блок занят!! Не записан в gameMap!!!');
+		if(this.get(x,y) != (null || undefined )){
+			log('Данный блок занят!! Не записан в gameMap!!! объект: ' + obj );
 			return;
+		}else{
+			this.set(obj,x,y);
+			//log("Установлен блок на координаты: " + x + "," + y);
 		}
-		this.gameMap[x, y] = obj;
+		
 	}
 	goTo(callObj, x, y){
-		if(callObj instanceof snakeController){
-			if(x >= allUnitsWidth || x < 0 || y >= allUnitsHeight || y < 0){
-				callObj.destroySnake();
-				return false;
-			}	
+		var goToBox = this.get(x,y);
+		if(x >= allUnitsWidth || x < 0 || y >= allUnitsHeight || y < 0){
+			callObj.destroySnake();
+			return false;
+		}else if(goToBox instanceof SnakeBox){
+			if(callObj.containsBlock(goToBox)){
+				if(cuttingDownSnake){ // флаг на срезание змейки
+					callObj.removedFromThisBox(goToBox);
+					return true
+				}else{
+					callObj.destroySnake();
+					return false;
+				}
+			}else{
+				var bufferBox;
+				while(goToBox != (null || undefined)){
+					log("чужая змейка съедена до блока:" + goToBox);
+					var bufferBox = goToBox.getNextBox();
+					goToBox.deleteBox();
+					goToBox = bufferBox;
+				}
+			}
+		}else if(goToBox instanceof Point){
+			callObj.addPoint();
+			goToBox.resetPoint();
 		}
 	}
-	get(x, y){
-		return this.gameMap[x, y];
+	set(obj,x,y){
+		if(this.gameMap[x] == undefined){
+			this.gameMap[x] = {};
+			this.gameMap[x][y] = obj;
+		}else{
+			this.gameMap[x][y] = obj;
+		}
+	}
+	get(x,y){
+		if(this.gameMap[x] != (null||undefined)){
+			return this.gameMap[x][y]
+		}else{
+			return null;
+		}
+	}
+	clear(x, y){
+		delete this.gameMap[x][y];
+	}
+	toString(){
+		return (this.gameMap)
 	}
 }
 class Game{
@@ -407,7 +597,7 @@ class Game{
 		this.initBlock();
 		this.controller = new gameController();
 		this.controller.addSnake(6, 4, 5, "down", "first", "red");
-		this.controller.setControl('arrows', 'first',  false);
+		this.controller.setControl('arrows', 'first',  true);
 		//this.controller.addSnake(4, 4, 5, "down", "second", "green");
 		//this.controller.setControl('character', "second", true);
 	}
