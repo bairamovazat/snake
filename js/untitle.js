@@ -11,7 +11,6 @@ function getByTag(tag){
 }
 class Swipe{
 	constructor(){
-		alert("init Swipe")
 		this.x;
 		this.y;
 		this.minSwipeLength = 200;
@@ -32,15 +31,15 @@ class Swipe{
 		var dY = currentY - this.lastY;
 		if(Math.abs(dX) >= len && Math.abs(dY) >= len){
 			if(Math.abs(dX) > Math.abs(dX)){
-				swipe = (dX > 0)? "right" :"left"; 
+				swipe = (dX > 0)? "right" : "left"; 
 			}else{
 				swipe = (dY > 0)? "down" : "up"; // данные расчитаны на обычную координатную плоскость	
 			}
 		}else if(Math.abs(dX) >= len){
-			swipe = (dX > 0)? "right" :"left";
+			swipe = (dX > 0)? "right" : "left";
 		}else if(Math.abs(dY) >= len){
-			swipe = (dY > 0)? "up" :"down";
+			swipe = (dY > 0)? "down" : "up";
 		}
-		alert(swipe + "as");
+		alert(swipe);
 	}
 }
