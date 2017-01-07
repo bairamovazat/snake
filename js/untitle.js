@@ -40,6 +40,6 @@ class Swipe{
 		}else if(Math.abs(dY) >= len){
 			swipe = (dY > 0)? "up" :"down";
 		}
-		alert(swipe);
+		alert(swipe + "as");
 	}
 }
