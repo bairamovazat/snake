@@ -604,8 +604,8 @@ class Game{
 	constructor(){
 		var obj = this;
 		if(new DeviceType().mobile() == true){
-			height = screen.height - (bodyBorder * 2); // расчитываем размеры с бордюром вместе
-			width = screen.width - (bodyBorder * 2);
+			height = document.documentElement.clientHeight - (bodyBorder * 2); // расчитываем размеры с бордюром вместе
+			width = document.documentElement.clientWidth - (bodyBorder * 2);
 			boxWidth = (width / allUnitsWidth); // считаем размер блока относительно количества блоков
 			boxHeight = boxWidth;
 			allUnitsHeight = (height / boxWidth); // считаем количество блоков по высоте
