@@ -384,7 +384,7 @@ class gameController{
 		this.snakesSum += 1;
 	}
 	snakeDestroyed(snakeName){
-		alert("Вы проиграли :( \n Попробуйте снова!");
+		alert("Вы проиграли :( \nПопробуйте снова!");
 		var length = this.getSnakesArrayLength()
 		if (length <= 1	 && this.snakesSum < 2){
 			this.snakesArray[snakeName].resetSnake();
