@@ -2,14 +2,15 @@ document.addEventListener("DOMContentLoaded", main);
 const debug = true;
 const outputForTheField = false;
 const cuttingDownSnake = true; //выбор срезать змейку или польностью удалять при столкновении 
-const width = 600;
-const height = 600;
-const allUnitsWidth = 15; // всего блоков по  ширине
-const allUnitsHeight = 15; // всего блоков по  высоте
-const boxWidth = width / allUnitsWidth;
-const boxHeight = height / allUnitsHeight;
+var width = 600;
+var height = 600;
+var allUnitsWidth = 15; // всего блоков по  ширине
+var allUnitsHeight = 15; // всего блоков по  высоте
+var boxWidth = width / allUnitsWidth;
+var boxHeight = height / allUnitsHeight;
 const routeMap = {"up":[0,-1],"down":[0,1],"left":[-1,0],"right":[1,0]}
 const speed = 300;
+const bodyBorder = 6;
 class SnakeBox{
 	constructor(x, y, route, boxName, color){
 		this.color = color;
@@ -602,6 +603,19 @@ class GameMap{
 class Game{
 	constructor(){
 		var obj = this;
+		if(new DeviceType().mobile() == true){
+			height = screen.height - (bodyBorder * 2); // расчитываем размеры с бордюром вместе
+			width = screen.width - (bodyBorder * 2);
+			boxWidth = Math.round(width / allUnitsWidth); // считаем размер блока относительно количества блоков
+			boxHeight = boxWidth;
+			allUnitsHeight = Math.round(height / boxWidth); // считаем количество блоков по высоте
+			width = boxWidth * allUnitsWidth; // теперь округляем высоту и ширину до круглых чисел
+			height = boxHeight * allUnitsHeight;
+			alert("allUnitsHeight = " + allUnitsHeight);
+			this.snakesControllerType = "mobile"
+		}else{
+			this.snakesControllerType = "arrows"
+		}
 		getById("mainBox").style = "width:"+width+"px;height:"+height+"px;display:block";
 		getById("start").onclick = function(){
 			obj.start();
@@ -611,13 +625,8 @@ class Game{
 		getById("mainStart").style.display = "none";
 		this.initBlock();
 		this.controller = new gameController();
-		if(new DeviceType().mobile() == true){
-			this.controller.addSnake(6, 4, 5, "down", "first", "red");
-			this.controller.setControl('mobile', 'first',  true);
-		}else{
-			this.controller.addSnake(6, 4, 5, "down", "first", "red");
-			this.controller.setControl('arrows', 'first',  true);
-		}
+		this.controller.addSnake(6, 4, 5, "down", "first", "red");
+		this.controller.setControl(this.snakesControllerType, 'first',  true);
 		//this.controller.addSnake(4, 4, 5, "down", "second", "green");
 		//this.controller.setControl('character', "second", true);
 	}
