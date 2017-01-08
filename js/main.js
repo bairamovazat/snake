@@ -606,12 +606,11 @@ class Game{
 		if(new DeviceType().mobile() == true){
 			height = screen.height - (bodyBorder * 2); // расчитываем размеры с бордюром вместе
 			width = screen.width - (bodyBorder * 2);
-			boxWidth = Math.round(width / allUnitsWidth); // считаем размер блока относительно количества блоков
+			boxWidth = (width / allUnitsWidth); // считаем размер блока относительно количества блоков
 			boxHeight = boxWidth;
-			allUnitsHeight = Math.round(height / boxWidth); // считаем количество блоков по высоте
+			allUnitsHeight = (height / boxWidth); // считаем количество блоков по высоте
 			width = boxWidth * allUnitsWidth; // теперь округляем высоту и ширину до круглых чисел
-			height = boxHeight * allUnitsHeight;
-			alert("allUnitsHeight = " + allUnitsHeight);
+			height = Math.round(boxHeight) * allUnitsHeight;
 			this.snakesControllerType = "mobile"
 		}else{
 			this.snakesControllerType = "arrows"
