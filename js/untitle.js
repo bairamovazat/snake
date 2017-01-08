@@ -1,8 +1,14 @@
 document.addEventListener("DOMContentLoaded", main);
 function main(){
 	var swipe = new Swipe();
+	swipe.setUpFunc(function(){example("up")});
+	swipe.setDownFunc(function(){example("down")});
+	swipe.setLeftFunc(function(){example("left")});
+	swipe.setRightFunc(function(){example("right")});
 }
-
+function example(value){
+	alert(value);
+}
 function getById(dom) {
 	return document.getElementById(dom);
 }
@@ -11,6 +17,12 @@ function getByTag(tag){
 }
 class Swipe{
 	constructor(){
+		this.swipeMap = {};
+		this.swipeMap["up"] = function(){};
+		this.swipeMap["right"] = function(){};
+		this.swipeMap["down"] = function(){};
+		this.swipeMap["left"] = function(){};
+		this.swipeMap["notswipe"] = function(){};
 		this.x;
 		this.y;
 		this.minSwipeLength = 200;
@@ -23,12 +35,16 @@ class Swipe{
 		this.lastY = e.changedTouches[0].pageY;;
 	}
 	swipeEnd(e){
-		var swipe = "notswipe";
-		var len = this.minSwipeLength;
 		var currentX = e.changedTouches[0].pageX;
 		var currentY = e.changedTouches[0].pageY; 
 		var dX = currentX - this.lastX ;
 		var dY = currentY - this.lastY;
+		var swipe = this.swipeDefinition(dX,dY);
+		this.swipeMap[swipe]();
+	}
+	swipeDefinition(dX,dY){
+		var len = this.minSwipeLength;
+		var swipe = "notswipe";
 		if(Math.abs(dX) >= len && Math.abs(dY) >= len){
 			if(Math.abs(dX) > Math.abs(dX)){
 				swipe = (dX > 0)? "right" : "left"; 
@@ -40,6 +56,18 @@ class Swipe{
 		}else if(Math.abs(dY) >= len){
 			swipe = (dY > 0)? "down" : "up";
 		}
-		alert(swipe);
+		return swipe;
+	}
+	setUpFunc(func){
+		this.swipeMap["up"] = func;
+	}
+	setDownFunc(func){
+		this.swipeMap["down"] = func;
+	}
+	setLeftFunc(func){
+		this.swipeMap["left"] = func;
+	}
+	setRightFunc(func){
+		this.swipeMap["right"] = func;
 	}
 }
