@@ -17,6 +17,8 @@ function getByTag(tag){
 }
 class Swipe{
 	constructor(){
+		var isMobile = new DeviceType().mobile();
+		alert(isMobile)
 		this.swipeMap = {};
 		this.swipeMap["up"] = function(){};
 		this.swipeMap["right"] = function(){};
@@ -69,5 +71,33 @@ class Swipe{
 	}
 	setRightFunc(func){
 		this.swipeMap["right"] = func;
+	}
+}
+class DeviceType{
+	constructor(){
+		var obj = this;
+		this.isMobile = {
+		    Android: function() {
+		        return navigator.userAgent.match(/Android/i);
+		    },
+		    BlackBerry: function() {
+		        return navigator.userAgent.match(/BlackBerry/i);
+		    },
+		    iOS: function() {
+		        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+		    },
+		    Opera: function() {
+		        return navigator.userAgent.match(/Opera Mini/i);
+		    },
+		    Windows: function() {
+		        return navigator.userAgent.match(/IEMobile/i);
+		    },
+		    any: function() {
+		        return (obj.isMobile.Android() != null || obj.isMobile.BlackBerry() != null || obj.isMobile.iOS() || obj.isMobile.Opera() || obj.isMobile.Windows());
+		    }
+		};
+	}
+	mobile(){
+		return this.isMobile.any() == null ? false : true;
 	}
 }

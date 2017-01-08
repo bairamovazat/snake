@@ -420,12 +420,6 @@ class gameController{
 			this.keyPressMap[109] = function(){obj.snakesArray[snakeName].popBox();}
 			this.keyPressMap[96] = function(){log(gameMap.toString());}
 		}
-		else if(type == 'character' && autoControl == false){
-			this.keyPressMap[87] = function(){obj.snakesArray[snakeName].up();}
-			this.keyPressMap[68] = function(){obj.snakesArray[snakeName].right();}
-			this.keyPressMap[83] = function(){obj.snakesArray[snakeName].down();}
-			this.keyPressMap[65] = function(){obj.snakesArray[snakeName].left();}
-		}
 		else if(type == 'arrows' && autoControl == true){
 			this.keyPressMap[38] = function(){obj.snakesArray[snakeName].setNextRoute("up");}
 			this.keyPressMap[39] = function(){obj.snakesArray[snakeName].setNextRoute("right");}
@@ -433,11 +427,30 @@ class gameController{
 			this.keyPressMap[37] = function(){obj.snakesArray[snakeName].setNextRoute("left");}
 			this.snakesArray[snakeName].recusiveMove();
 		}
+		else if(type == 'character' && autoControl == false){
+			this.keyPressMap[87] = function(){obj.snakesArray[snakeName].up();}
+			this.keyPressMap[68] = function(){obj.snakesArray[snakeName].right();}
+			this.keyPressMap[83] = function(){obj.snakesArray[snakeName].down();}
+			this.keyPressMap[65] = function(){obj.snakesArray[snakeName].left();}
+		}
 		else if(type == 'character' && autoControl == true){
 			this.keyPressMap[87] = function(){obj.snakesArray[snakeName].setNextRoute("up");}
 			this.keyPressMap[68] = function(){obj.snakesArray[snakeName].setNextRoute("right");}
 			this.keyPressMap[83] = function(){obj.snakesArray[snakeName].setNextRoute("down");}
 			this.keyPressMap[65] = function(){obj.snakesArray[snakeName].setNextRoute("left");}
+			this.snakesArray[snakeName].recusiveMove();
+		}else if(type == 'mobile' && autoControl == false){
+			this.mobileController = new Swipe();
+			this.mobileController.setUpFunc(function(){obj.snakesArray[snakeName].up();})
+			this.mobileController.setRightFunc(function(){obj.snakesArray[snakeName].right();})
+			this.mobileController.setDownFunc(function(){obj.snakesArray[snakeName].down();})
+			this.mobileController.setLeftFunc(function(){obj.snakesArray[snakeName].left();})
+		}else if(type == 'mobile' && autoControl == true){
+			this.mobileController = new Swipe();
+			this.mobileController.setUpFunc(function(){obj.snakesArray[snakeName].setNextRoute("up");})
+			this.mobileController.setRightFunc(function(){obj.snakesArray[snakeName].setNextRoute("right");})
+			this.mobileController.setDownFunc(function(){obj.snakesArray[snakeName].setNextRoute("down");})
+			this.mobileController.setLeftFunc(function(){obj.snakesArray[snakeName].setNextRoute("left");})
 			this.snakesArray[snakeName].recusiveMove();
 		}
 	}
@@ -598,8 +611,13 @@ class Game{
 		getById("mainStart").style.display = "none";
 		this.initBlock();
 		this.controller = new gameController();
-		this.controller.addSnake(6, 4, 5, "down", "first", "red");
-		this.controller.setControl('arrows', 'first',  true);
+		if(new DeviceType().mobile() == true){
+			this.controller.addSnake(6, 4, 5, "down", "first", "red");
+			this.controller.setControl('mobile', 'first',  true);
+		}else{
+			this.controller.addSnake(6, 4, 5, "down", "first", "red");
+			this.controller.setControl('arrows', 'first',  true);
+		}
 		//this.controller.addSnake(4, 4, 5, "down", "second", "green");
 		//this.controller.setControl('character', "second", true);
 	}
@@ -678,4 +696,88 @@ function log(logs){
 }
 function main(){
 	var game = new Game();
+}
+class Swipe{
+	constructor(){
+		this.swipeMap = {};
+		this.swipeMap["up"] = function(){};
+		this.swipeMap["right"] = function(){};
+		this.swipeMap["down"] = function(){};
+		this.swipeMap["left"] = function(){};
+		this.swipeMap["notswipe"] = function(){};
+		this.x;
+		this.y;
+		this.minSwipeLength = 200;
+		var obj = this;
+		window.addEventListener("touchstart", function(e){obj.swipeStart(e)});
+		window.addEventListener("touchend" , function(e){obj.swipeEnd(e)});
+	}
+	swipeStart(e){
+		this.lastX = e.changedTouches[0].pageX;;
+		this.lastY = e.changedTouches[0].pageY;;
+	}
+	swipeEnd(e){
+		var currentX = e.changedTouches[0].pageX;
+		var currentY = e.changedTouches[0].pageY; 
+		var dX = currentX - this.lastX ;
+		var dY = currentY - this.lastY;
+		var swipe = this.swipeDefinition(dX,dY);
+		this.swipeMap[swipe]();
+	}
+	swipeDefinition(dX,dY){
+		var len = this.minSwipeLength;
+		var swipe = "notswipe";
+		if(Math.abs(dX) >= len && Math.abs(dY) >= len){
+			if(Math.abs(dX) > Math.abs(dX)){
+				swipe = (dX > 0)? "right" : "left"; 
+			}else{
+				swipe = (dY > 0)? "down" : "up"; // данные расчитаны на обычную координатную плоскость	
+			}
+		}else if(Math.abs(dX) >= len){
+			swipe = (dX > 0)? "right" : "left";
+		}else if(Math.abs(dY) >= len){
+			swipe = (dY > 0)? "down" : "up";
+		}
+		return swipe;
+	}
+	setUpFunc(func){
+		this.swipeMap["up"] = func;
+	}
+	setDownFunc(func){
+		this.swipeMap["down"] = func;
+	}
+	setLeftFunc(func){
+		this.swipeMap["left"] = func;
+	}
+	setRightFunc(func){
+		this.swipeMap["right"] = func;
+	}
+}
+class DeviceType{
+	constructor(){
+		var obj = this;
+		this.isMobile = {
+		    Android: function() {
+		        return navigator.userAgent.match(/Android/i);
+		    },
+		    BlackBerry: function() {
+		        return navigator.userAgent.match(/BlackBerry/i);
+		    },
+		    iOS: function() {
+		        return navigator.userAgent.match(/iPhone|iPad|iPod/i);
+		    },
+		    Opera: function() {
+		        return navigator.userAgent.match(/Opera Mini/i);
+		    },
+		    Windows: function() {
+		        return navigator.userAgent.match(/IEMobile/i);
+		    },
+		    any: function() {
+		        return (obj.isMobile.Android() != null || obj.isMobile.BlackBerry() != null || obj.isMobile.iOS() || obj.isMobile.Opera() || obj.isMobile.Windows());
+		    }
+		};
+	}
+	mobile(){
+		return this.isMobile.any() == null ? false : true;
+	}
 }
