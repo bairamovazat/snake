@@ -740,7 +740,7 @@ class Swipe{
 		this.swipeMap["notswipe"] = function(){};
 		this.x;
 		this.y;
-		this.minSwipeLength = 200;
+		this.minSwipeLength = 150;
 		var obj = this;
 		window.addEventListener("touchstart", function(e){obj.swipeStart(e)});
 		window.addEventListener("touchend" , function(e){obj.swipeEnd(e)});
