@@ -384,7 +384,7 @@ class gameController{
 		this.snakesSum += 1;
 	}
 	snakeDestroyed(snakeName){
-		alert(snakeName);
+		alert("Вы проиграли :( \n Попробуйте снова!");
 		var length = this.getSnakesArrayLength()
 		if (length <= 1	 && this.snakesSum < 2){
 			this.snakesArray[snakeName].resetSnake();
@@ -608,9 +608,9 @@ class Game{
 			width = document.documentElement.clientWidth - (bodyBorder * 2);
 			boxWidth = (width / allUnitsWidth); // считаем размер блока относительно количества блоков
 			boxHeight = boxWidth;
-			allUnitsHeight = Math.round(height / boxWidth); // считаем количество блоков по высоте
+			allUnitsHeight = Math.floor(height / boxWidth); // считаем количество блоков по высоте
 			width = boxWidth * allUnitsWidth; // теперь округляем высоту и ширину до круглых чисел
-			height = (boxHeight) * allUnitsHeight;
+			height = boxHeight * allUnitsHeight ;
 			this.snakesControllerType = "mobile"
 		}else{
 			this.snakesControllerType = "arrows"
