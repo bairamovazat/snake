@@ -610,7 +610,7 @@ class Game{
 			boxHeight = boxWidth;
 			allUnitsHeight = Math.round(height / boxWidth); // считаем количество блоков по высоте
 			width = boxWidth * allUnitsWidth; // теперь округляем высоту и ширину до круглых чисел
-			height = Math.round(boxHeight) * allUnitsHeight;
+			height = (boxHeight) * allUnitsHeight;
 			this.snakesControllerType = "mobile"
 		}else{
 			this.snakesControllerType = "arrows"
